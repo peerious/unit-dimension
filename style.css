@@ -507,6 +507,42 @@ button:hover{
 }
 
 /* =====================================
+   MAIN LAYOUT
+===================================== */
+
+#mainLayout{
+
+    display:grid;
+
+    grid-template-columns:
+        minmax(0,1fr)
+        340px;
+
+    gap:20px;
+
+    align-items:start;
+
+    margin-top:20px;
+}
+
+#leftPanel{
+
+    min-width:0;
+}
+
+#rightPanel{
+
+    width:340px;
+}
+
+#rightPanel .card{
+
+    position:sticky;
+
+    top:20px;
+}
+
+/* =====================================
    FEEDBACK
 ===================================== */
 
@@ -514,7 +550,9 @@ button:hover{
 
     text-align:center;
 
-    font-size:90px;
+    font-size:120px;
+
+    margin-bottom:10px;
 }
 
 #mentor{
@@ -607,6 +645,22 @@ button:hover{
 ===================================== */
 
 @media(max-width:900px){
+#mainLayout{
+
+    grid-template-columns:
+        1fr;
+}
+
+#rightPanel{
+
+    width:auto;
+}
+
+#rightPanel .card{
+
+    position:static;
+}
+
 
     #hud{
 
