@@ -1,0 +1,466 @@
+<!DOCTiYPE html>
+<html lang="th">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0">
+
+<title>
+Space Mission:
+Physics Units & Dimensions Challenge v6
+</title>
+
+<link rel="stylesheet"
+      href="style.css">
+
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- =====================================
+     START SCREEN
+===================================== -->
+
+<div id="startScreen">
+
+    <div class="hero">
+
+        <h1>
+
+            🚀 Space Mission v6
+
+        </h1>
+
+        <h2>
+
+            หน่วยและมิติทางฟิสิกส์
+
+        </h2>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+
+            ภารกิจ
+
+        </h3>
+
+        <p>
+
+            ยานอวกาศ
+            <b>KU Explorer</b>
+
+            กำลังเดินทางจาก
+
+            🌍 โลก
+
+            ไปยัง
+
+            🌕 ดวงจันทร์
+
+        </p>
+
+        <p>
+
+            คุณต้องช่วยระบบนำทาง
+            โดยตอบคำถามเกี่ยวกับ
+
+            หน่วย (Unit)
+
+            และ
+
+            มิติ (Dimension)
+
+            ของปริมาณทางฟิสิกส์
+
+        </p>
+
+        <ul>
+
+            <li>
+                ✅ ตอบถูก
+                ยานเดินหน้า
+            </li>
+
+            <li>
+                ❌ ตอบผิด
+                พลังงานลดลง
+            </li>
+
+            <li>
+                🔥 คอมโบ
+                เพิ่มคะแนน
+            </li>
+
+            <li>
+                🌕 ถึงดวงจันทร์
+                ภารกิจสำเร็จ
+            </li>
+
+        </ul>
+
+    </div>
+
+    <!-- SETTINGS -->
+
+    <div class="settings">
+
+        <div>
+
+            <label>
+
+                โหมดเกม
+
+            </label>
+
+            <select id="mode">
+
+                <option value="unit">
+
+                    หน่วย (Unit)
+
+                </option>
+
+                <option value="dimension">
+
+                    มิติ (Dimension)
+
+                </option>
+
+                <option value="mixed"
+                        selected>
+
+                    สุ่มผสม
+
+                </option>
+
+            </select>
+
+        </div>
+
+        <div>
+
+            <label>
+
+                จำนวนข้อ
+
+            </label>
+
+            <select id="questionCount">
+
+                <option>
+
+                    10
+
+                </option>
+
+                <option selected>
+
+                    20
+
+                </option>
+
+                <option>
+
+                    30
+
+                </option>
+
+            </select>
+
+        </div>
+
+        <div>
+
+            <label>
+
+                พลังงานเริ่มต้น
+
+            </label>
+
+            <select id="energyCount">
+
+                <option>
+
+                    3
+
+                </option>
+
+                <option selected>
+
+                    5
+
+                </option>
+
+                <option>
+
+                    7
+
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <button id="startBtn">
+
+        🚀 เริ่มภารกิจ
+
+    </button>
+
+</div>
+
+<!-- =====================================
+     GAME SCREEN
+===================================== -->
+
+<div id="gameScreen"
+     class="hidden">
+
+    <div id="hud">
+
+        <div class="hudBox">
+
+            คะแนน
+
+            <div id="score">
+
+                0
+
+            </div>
+
+        </div>
+
+        <div class="hudBox">
+
+            คอมโบ
+
+            <div id="combo">
+
+                0
+
+            </div>
+
+        </div>
+
+        <div class="hudBox">
+
+            ข้อ
+
+            <div>
+
+                <span id="currentQ">
+
+                    1
+
+                </span>
+
+                /
+
+                <span id="totalQ">
+
+                    20
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SPACE -->
+
+    <div id="spacePanel">
+
+        <div id="earth">
+
+            🌍
+
+        </div>
+
+        <div id="moon">
+
+            🌕
+
+        </div>
+
+        <div id="path">
+
+        </div>
+
+        <div id="progress">
+
+        </div>
+
+        <!-- SVG SHIP -->
+
+        <div id="ship">
+
+            <svg
+            width="90"
+            height="40"
+            viewBox="0 0 90 40">
+
+                <polygon
+                points="10,20 45,5 80,20 45,35"
+                fill="#6cf"/>
+
+                <circle
+                cx="45"
+                cy="20"
+                r="7"
+                fill="#fff"/>
+
+            </svg>
+
+        </div>
+
+    </div>
+
+    <!-- ENERGY -->
+
+    <div id="energyBar">
+
+    </div>
+
+    <!-- QUESTION -->
+
+    <div class="card">
+
+        <h2 id="questionText">
+
+            ...
+
+        </h2>
+
+        <div id="choices">
+
+        </div>
+
+    </div>
+
+    <!-- FEEDBACK -->
+
+    <div class="card">
+
+        <div id="avatar">
+
+            🤖
+
+        </div>
+
+        <h3 id="mentor">
+
+            Astro Bot
+
+        </h3>
+
+        <div id="feedback">
+
+            พร้อมออกเดินทาง
+
+        </div>
+
+        <div id="fact">
+
+            💡 เกร็ดความรู้
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =====================================
+     FINISH SCREEN
+===================================== -->
+
+<div id="finishScreen"
+     class="hidden">
+
+    <div class="certificate">
+
+        <h1>
+
+            🏅
+
+        </h1>
+
+        <h2>
+
+            นักบินอวกาศฝึกหัด
+
+        </h2>
+
+        <p>
+
+            Kasetsart Space Academy
+
+        </p>
+
+        <p>
+
+            ผ่านภารกิจ
+
+            Physics Units &
+            Dimensions Mission
+
+        </p>
+
+        <p>
+
+            สำเร็จ
+
+        </p>
+
+        <hr>
+
+        <p>
+
+            คะแนนรวม
+
+            <span id="finalScore">
+
+                0
+
+            </span>
+
+        </p>
+
+        <p>
+
+            ความแม่นยำ
+
+            <span id="accuracy">
+
+                0%
+
+            </span>
+
+        </p>
+
+    </div>
+
+    <button
+        id="restartBtn">
+
+        🔄 เล่นอีกครั้ง
+
+    </button>
+
+</div>
+
+<script src="audio.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>

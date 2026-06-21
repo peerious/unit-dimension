@@ -1,0 +1,1109 @@
+/* =====================================
+   GAME.JS
+   Space Mission v6
+   PART 1
+===================================== */
+
+/* =====================================
+   GLOBAL VARIABLES
+===================================== */
+
+let mode = "mixed";
+
+let currentQuestion = 0;
+
+let totalQuestions = 20;
+
+let score = 0;
+
+let combo = 0;
+
+let hp = 5;
+
+let correctAnswers = 0;
+
+let totalAnswered = 0;
+
+let currentData = null;
+
+/* =====================================
+   QUESTION DATABASE
+===================================== */
+
+const DATABASE = [
+
+{
+name:"Velocity",
+thai:"ความเร็ว",
+unit:"m/s",
+dimension:"[L T⁻¹]",
+fact:"อัตราการเปลี่ยนตำแหน่งต่อเวลา"
+},
+
+{
+name:"Acceleration",
+thai:"ความเร่ง",
+unit:"m/s²",
+dimension:"[L T⁻²]",
+fact:"อัตราการเปลี่ยนความเร็วต่อเวลา"
+},
+
+{
+name:"Force",
+thai:"แรง",
+unit:"N",
+dimension:"[M L T⁻²]",
+fact:"N = kg·m/s²"
+},
+
+{
+name:"Energy",
+thai:"พลังงาน",
+unit:"J",
+dimension:"[M L² T⁻²]",
+fact:"J = N·m"
+},
+
+{
+name:"Power",
+thai:"กำลัง",
+unit:"W",
+dimension:"[M L² T⁻³]",
+fact:"W = J/s"
+},
+
+{
+name:"Pressure",
+thai:"ความดัน",
+unit:"Pa",
+dimension:"[M L⁻¹ T⁻²]",
+fact:"Pa = N/m²"
+},
+
+{
+name:"Momentum",
+thai:"โมเมนตัม",
+unit:"kg·m/s",
+dimension:"[M L T⁻¹]",
+fact:"p = mv"
+},
+
+{
+name:"Density",
+thai:"ความหนาแน่น",
+unit:"kg/m³",
+dimension:"[M L⁻³]",
+fact:"มวลต่อปริมาตร"
+},
+
+{
+name:"Frequency",
+thai:"ความถี่",
+unit:"Hz",
+dimension:"[T⁻¹]",
+fact:"Hz = 1/s"
+},
+
+{
+name:"Electric Charge",
+thai:"ประจุไฟฟ้า",
+unit:"C",
+dimension:"[I T]",
+fact:"C = A·s"
+},
+
+{
+name:"Voltage",
+thai:"ความต่างศักย์ไฟฟ้า",
+unit:"V",
+dimension:"[M L² T⁻³ I⁻¹]",
+fact:"V = J/C"
+},
+
+{
+name:"Current",
+thai:"กระแสไฟฟ้า",
+unit:"A",
+dimension:"[I]",
+fact:"หน่วยฐาน SI"
+},
+
+{
+name:"Resistance",
+thai:"ความต้านทานไฟฟ้า",
+unit:"Ω",
+dimension:"[M L² T⁻³ I⁻²]",
+fact:"Ω = V/A"
+},
+
+{
+name:"Capacitance",
+thai:"ความจุไฟฟ้า",
+unit:"F",
+dimension:"[M⁻¹ L⁻² T⁴ I²]",
+fact:"F = C/V"
+},
+
+{
+name:"Magnetic Flux",
+thai:"ฟลักซ์แม่เหล็ก",
+unit:"Wb",
+dimension:"[M L² T⁻² I⁻¹]",
+fact:"Wb = V·s"
+}
+
+];
+
+/* =====================================
+   SHORT LISTS
+===================================== */
+
+const ALL_UNITS = [
+
+"m",
+"m/s",
+"m/s²",
+"N",
+"J",
+"W",
+"Pa",
+"kg·m/s",
+"kg/m³",
+"Hz",
+"C",
+"A",
+"V",
+"Ω",
+"F",
+"Wb"
+
+];
+
+const ALL_DIMENSIONS = [
+
+"[L]",
+"[L T⁻¹]",
+"[L T⁻²]",
+"[M L T⁻²]",
+"[M L² T⁻²]",
+"[M L² T⁻³]",
+"[M L⁻¹ T⁻²]",
+"[M L T⁻¹]",
+"[M L⁻³]",
+"[T⁻¹]",
+"[I T]",
+"[I]",
+"[M L² T⁻³ I⁻¹]",
+"[M L² T⁻³ I⁻²]",
+"[M⁻¹ L⁻² T⁴ I²]",
+"[M L² T⁻² I⁻¹]"
+
+];
+
+/* =====================================
+   START GAME
+===================================== */
+
+window.addEventListener(
+
+    "load",
+
+    ()=>{
+
+        document
+        .getElementById(
+            "startBtn"
+        )
+        .addEventListener(
+
+            "click",
+
+            startGame
+
+        );
+
+        document
+        .getElementById(
+            "restartBtn"
+        )
+        .addEventListener(
+
+            "click",
+
+            ()=>{
+
+                location.reload();
+
+            }
+
+        );
+
+        createStars();
+
+    }
+
+);
+
+function startGame(){
+
+    playClick();
+
+    mode =
+
+        document
+        .getElementById(
+            "mode"
+        )
+        .value;
+
+    totalQuestions = Number(
+
+        document
+        .getElementById(
+            "questionCount"
+        )
+        .value
+
+    );
+
+    hp = Number(
+
+        document
+        .getElementById(
+            "energyCount"
+        )
+        .value
+
+    );
+
+    document
+    .getElementById(
+        "startScreen"
+    )
+    .classList.add(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "gameScreen"
+    )
+    .classList.remove(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "totalQ"
+    )
+    .textContent =
+    totalQuestions;
+
+    updateEnergy();
+
+    nextQuestion();
+
+}
+
+/* =====================================
+   HELPERS
+===================================== */
+
+function shuffle(arr){
+
+    return arr
+    .sort(
+        ()=>Math.random()-0.5
+    );
+
+}
+
+function randomItem(arr){
+
+    return arr[
+
+        Math.floor(
+
+            Math.random()
+            *
+            arr.length
+
+        )
+
+    ];
+
+}
+
+/* =====================================
+   STARFIELD
+===================================== */
+
+function createStars(){
+
+    const cv =
+
+        document
+        .getElementById(
+            "stars"
+        );
+
+    const ctx =
+        cv.getContext("2d");
+
+    function resize(){
+
+        cv.width =
+            window.innerWidth;
+
+        cv.height =
+            window.innerHeight;
+
+    }
+
+    resize();
+
+    window.addEventListener(
+        "resize",
+        resize
+    );
+
+    const stars = [];
+
+    for(
+
+        let i=0;
+
+        i<250;
+
+        i++
+
+    ){
+
+        stars.push({
+
+            x:
+            Math.random()
+            *
+            cv.width,
+
+            y:
+            Math.random()
+            *
+            cv.height,
+
+            r:
+            Math.random()*2+1,
+
+            speed:
+            Math.random()*2+0.5
+
+        });
+
+    }
+
+    function animate(){
+
+        ctx.clearRect(
+            0,
+            0,
+            cv.width,
+            cv.height
+        );
+
+        ctx.fillStyle =
+            "white";
+
+        stars.forEach(
+
+            s=>{
+
+                ctx.fillRect(
+
+                    s.x,
+                    s.y,
+                    s.r,
+                    s.r
+
+                );
+
+                s.x -=
+                    s.speed;
+
+                if(
+                    s.x < 0
+                ){
+
+                    s.x =
+                        cv.width;
+
+                }
+
+            }
+
+        );
+
+        requestAnimationFrame(
+            animate
+        );
+
+    }
+
+    animate();
+
+}
+/* =====================================
+   GAME.JS
+   Space Mission v6
+   PART 2
+===================================== */
+
+/* =====================================
+   NEXT QUESTION
+===================================== */
+
+function nextQuestion(){
+
+    if(
+        currentQuestion >=
+        totalQuestions
+    ){
+
+        finishMission();
+
+        return;
+    }
+
+    currentQuestion++;
+
+    document
+    .getElementById(
+        "currentQ"
+    )
+    .textContent =
+    currentQuestion;
+
+    currentData =
+
+        randomItem(
+            DATABASE
+        );
+
+    generateQuestion();
+
+    updateProgress();
+
+}
+
+/* =====================================
+   QUESTION GENERATOR
+===================================== */
+
+function generateQuestion(){
+
+    const q = currentData;
+
+    let questionType =
+        mode;
+
+    if(
+        mode ===
+        "mixed"
+    ){
+
+        questionType =
+
+            Math.random() < 0.5
+
+            ?
+
+            "unit"
+
+            :
+
+            "dimension";
+
+    }
+
+    let questionText = "";
+
+    let correctAnswer = "";
+
+    let options = [];
+
+    if(
+        questionType ===
+        "unit"
+    ){
+
+        questionText =
+
+            `${q.thai}
+            (${q.name})
+
+            <br><br>
+
+            หน่วย SI
+            คืออะไร ?`;
+
+        correctAnswer =
+            q.unit;
+
+        options =
+
+            buildChoices(
+
+                q.unit,
+
+                ALL_UNITS
+
+            );
+
+    }
+    else{
+
+        questionText =
+
+            `${q.thai}
+            (${q.name})
+
+            <br><br>
+
+            มิติ
+            คืออะไร ?`;
+
+        correctAnswer =
+            q.dimension;
+
+        options =
+
+            buildChoices(
+
+                q.dimension,
+
+                ALL_DIMENSIONS
+
+            );
+
+    }
+
+    document
+    .getElementById(
+        "questionText"
+    )
+    .innerHTML =
+    questionText;
+
+    createButtons(
+
+        options,
+
+        correctAnswer,
+
+        q
+
+    );
+
+}
+
+/* =====================================
+   BUILD CHOICES
+===================================== */
+
+function buildChoices(
+
+    answer,
+
+    source
+
+){
+
+    let choices = [
+
+        answer
+
+    ];
+
+    let pool =
+
+        source.filter(
+
+            x =>
+
+            x !== answer
+
+        );
+
+    pool =
+
+        shuffle(
+            pool
+        );
+
+    choices.push(
+        pool[0]
+    );
+
+    choices.push(
+        pool[1]
+    );
+
+    choices.push(
+        pool[2]
+    );
+
+    return shuffle(
+        choices
+    );
+
+}
+
+/* =====================================
+   BUTTONS
+===================================== */
+
+function createButtons(
+
+    options,
+
+    correct,
+
+    q
+
+){
+
+    const box =
+
+        document
+        .getElementById(
+            "choices"
+        );
+
+    box.innerHTML = "";
+
+    options.forEach(
+
+        item => {
+
+            const btn =
+
+                document
+                .createElement(
+                    "button"
+                );
+
+            btn.className =
+                "choiceBtn";
+
+            btn.textContent =
+                item;
+
+            btn.onclick =
+                ()=>{
+
+                    answerQuestion(
+
+                        item,
+
+                        correct,
+
+                        q
+
+                    );
+
+                };
+
+            box.appendChild(
+                btn
+            );
+
+        }
+
+    );
+
+}
+
+/* =====================================
+   ANSWER
+===================================== */
+
+function answerQuestion(
+
+    choice,
+
+    correct,
+
+    q
+
+){
+
+    totalAnswered++;
+
+    if(
+        choice ===
+        correct
+    ){
+
+        correctAnswers++;
+
+        combo++;
+
+        score +=
+
+            100
+
+            +
+
+            combo * 10;
+
+        playCorrect();
+
+        if(
+            combo >= 3
+        ){
+
+            playCombo();
+
+        }
+
+        showMentor(
+
+            "🤖",
+
+            "Astro Bot",
+
+            "ยอดเยี่ยม!",
+
+            q.fact
+
+        );
+
+        moveShip();
+
+    }
+    else{
+
+        combo = 0;
+
+        hp--;
+
+        playWrong();
+
+        showMentor(
+
+            "👩‍🚀",
+
+            "ผู้บัญชาการโนวา",
+
+            "ยังไม่ถูก",
+
+            `คำตอบที่ถูกคือ
+
+            ${correct}`
+
+        );
+
+        updateEnergy();
+
+        if(
+            hp <= 0
+        ){
+
+            missionFailed();
+
+            return;
+        }
+
+    }
+
+    updateHUD();
+
+    setTimeout(
+
+        ()=>{
+
+            nextQuestion();
+
+        },
+
+        1200
+
+    );
+
+}
+
+/* =====================================
+   MENTOR
+===================================== */
+
+function showMentor(
+
+    avatar,
+
+    name,
+
+    message,
+
+    fact
+
+){
+
+    document
+    .getElementById(
+        "avatar"
+    )
+    .innerHTML =
+    avatar;
+
+    document
+    .getElementById(
+        "mentor"
+    )
+    .textContent =
+    name;
+
+    document
+    .getElementById(
+        "feedback"
+    )
+    .textContent =
+    message;
+
+    document
+    .getElementById(
+        "fact"
+    )
+    .innerHTML =
+
+        "💡 " +
+
+        fact;
+
+}
+
+/* =====================================
+   HUD
+===================================== */
+
+function updateHUD(){
+
+    document
+    .getElementById(
+        "score"
+    )
+    .textContent =
+    score;
+
+    document
+    .getElementById(
+        "combo"
+    )
+    .textContent =
+    combo;
+
+}
+
+/* =====================================
+   ENERGY
+===================================== */
+
+function updateEnergy(){
+
+    let txt = "";
+
+    for(
+        let i=0;
+        i<hp;
+        i++
+    ){
+
+        txt += "🔋";
+
+    }
+
+    document
+    .getElementById(
+        "energyBar"
+    )
+    .innerHTML = txt;
+
+}
+
+/* =====================================
+   SHIP
+===================================== */
+
+function moveShip(){
+
+    const ship =
+
+        document
+        .getElementById(
+            "ship"
+        );
+
+    const path =
+
+        document
+        .getElementById(
+            "path"
+        );
+
+    const progress =
+
+        document
+        .getElementById(
+            "progress"
+        );
+
+    const fraction =
+
+        currentQuestion
+        /
+        totalQuestions;
+
+    const maxDistance =
+
+        path.offsetWidth-120;
+
+    ship.style.left =
+
+        (
+            100 +
+
+            maxDistance *
+
+            fraction
+
+        )
+
+        + "px";
+
+    progress.style.width =
+
+        (
+            fraction
+            *
+            100
+        )
+
+        + "%";
+
+}
+
+/* =====================================
+   PROGRESS
+===================================== */
+
+function updateProgress(){
+
+    moveShip();
+
+}
+
+/* =====================================
+   FAILURE
+===================================== */
+
+function missionFailed(){
+
+    playMissionFailed();
+
+    document
+    .getElementById(
+        "gameScreen"
+    )
+    .classList.add(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "finishScreen"
+    )
+    .classList.remove(
+        "hidden"
+    );
+
+    document
+    .querySelector(
+        ".certificate h2"
+    )
+    .textContent =
+
+        "ภารกิจล้มเหลว";
+
+    document
+    .getElementById(
+        "finalScore"
+    )
+    .textContent =
+    score;
+
+    document
+    .getElementById(
+        "accuracy"
+    )
+    .textContent =
+
+        (
+            correctAnswers
+            /
+            totalAnswered
+            *
+            100
+        )
+        .toFixed(1)
+
+        + "%";
+
+}
+
+/* =====================================
+   SUCCESS
+===================================== */
+
+function finishMission(){
+
+    playMissionComplete();
+
+    document
+    .getElementById(
+        "gameScreen"
+    )
+    .classList.add(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "finishScreen"
+    )
+    .classList.remove(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "finalScore"
+    )
+    .textContent =
+    score;
+
+    document
+    .getElementById(
+        "accuracy"
+    )
+    .textContent =
+
+        (
+            correctAnswers
+            /
+            totalAnswered
+            *
+            100
+        )
+        .toFixed(1)
+
+        + "%";
+
+}
