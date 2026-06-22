@@ -7,6 +7,10 @@
 /* =====================================
    GLOBAL VARIABLES
 ===================================== */
+let resultSaved = false;
+const GOOGLE_SCRIPT_URL ="https://script.google.com/macros/s/AKfycbwUk5QaUW8AvBH6haS15SxXWVY6B2aZLaDa24RGEMMT_z8hzlcdZpTUC-9c3_88nySy/exec";
+let studentId = "";
+let studentEmail = "";
 
 let mode = "mixed";
 
@@ -102,54 +106,6 @@ thai:"ความถี่",
 unit:"Hz",
 dimension:"[T⁻¹]",
 fact:"Hz = 1/s"
-},
-
-{
-name:"Electric Charge",
-thai:"ประจุไฟฟ้า",
-unit:"C",
-dimension:"[I T]",
-fact:"C = A·s"
-},
-
-{
-name:"Voltage",
-thai:"ความต่างศักย์ไฟฟ้า",
-unit:"V",
-dimension:"[M L² T⁻³ I⁻¹]",
-fact:"V = J/C"
-},
-
-{
-name:"Current",
-thai:"กระแสไฟฟ้า",
-unit:"A",
-dimension:"[I]",
-fact:"หน่วยฐาน SI"
-},
-
-{
-name:"Resistance",
-thai:"ความต้านทานไฟฟ้า",
-unit:"Ω",
-dimension:"[M L² T⁻³ I⁻²]",
-fact:"Ω = V/A"
-},
-
-{
-name:"Capacitance",
-thai:"ความจุไฟฟ้า",
-unit:"F",
-dimension:"[M⁻¹ L⁻² T⁴ I²]",
-fact:"F = C/V"
-},
-
-{
-name:"Magnetic Flux",
-thai:"ฟลักซ์แม่เหล็ก",
-unit:"Wb",
-dimension:"[M L² T⁻² I⁻¹]",
-fact:"Wb = V·s"
 }
 
 ];
@@ -170,12 +126,6 @@ const ALL_UNITS = [
 "kg·m/s",
 "kg/m³",
 "Hz",
-"C",
-"A",
-"V",
-"Ω",
-"F",
-"Wb"
 
 ];
 
@@ -190,13 +140,7 @@ const ALL_DIMENSIONS = [
 "[M L⁻¹ T⁻²]",
 "[M L T⁻¹]",
 "[M L⁻³]",
-"[T⁻¹]",
-"[I T]",
-"[I]",
-"[M L² T⁻³ I⁻¹]",
-"[M L² T⁻³ I⁻²]",
-"[M⁻¹ L⁻² T⁴ I²]",
-"[M L² T⁻² I⁻¹]"
+"[T⁻¹]"
 
 ];
 
@@ -245,6 +189,58 @@ window.addEventListener(
 );
 
 function startGame(){
+
+studentId =
+document
+.getElementById(
+    "studentId"
+)
+.value
+.trim();
+
+studentEmail =
+document
+.getElementById(
+    "studentEmail"
+)
+.value
+.trim();
+
+if(
+    studentId === "" ||
+    studentEmail === ""
+){
+
+    alert(
+        "กรุณากรอก Student ID และ Email"
+    );
+
+    return;
+}
+
+if(
+    !studentEmail.endsWith(
+        "@ku.ac.th"
+    )
+){
+
+    alert(
+        "กรุณาใช้ Email KU"
+    );
+
+    return;
+}
+
+if(
+    studentId.length !== 10
+){
+
+    alert(
+        "Student ID ไม่ถูกต้อง"
+    );
+
+    return;
+}
 
     playClick();
 
@@ -1006,6 +1002,7 @@ function updateProgress(){
 
 function missionFailed(){
 
+	saveResult();
     playMissionFailed();
 
     document
@@ -1064,6 +1061,8 @@ function missionFailed(){
 
 function finishMission(){
 
+    saveResult();
+
     playMissionComplete();
 
     document
@@ -1105,5 +1104,79 @@ function finishMission(){
         .toFixed(1)
 
         + "%";
+
+}
+
+function saveResult(){
+
+    // ป้องกันส่งซ้ำ
+
+    if(resultSaved){
+
+        return;
+
+    }
+
+    resultSaved = true;
+
+    fetch(
+
+        GOOGLE_SCRIPT_URL,
+
+        {
+
+            method:"POST",
+
+            body:JSON.stringify({
+
+                studentId:
+                studentId,
+
+                email:
+                studentEmail,
+
+                score:
+                score,
+
+                accuracy:
+
+                (
+                    correctAnswers
+                    /
+                    totalAnswered
+                    *
+                    100
+                ).toFixed(1),
+
+                correct:
+                correctAnswers,
+
+                total:
+                totalAnswered,
+
+                mode:
+                mode,
+
+                date:
+                new Date()
+                .toISOString()
+
+            })
+
+        }
+
+    )
+
+    .then(
+
+        r=>console.log("saved")
+
+    )
+
+    .catch(
+
+        err=>console.error(err)
+
+    );
 
 }

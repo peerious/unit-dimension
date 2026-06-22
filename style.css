@@ -186,7 +186,8 @@ body{
     font-weight:bold;
 }
 
-.settings select{
+.settings select,
+.settings input{
 
     width:100%;
 
