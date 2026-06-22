@@ -34,6 +34,12 @@ let currentData = null;
 
 let questionPool = [];
 
+let wrongTopics = [];
+
+let questionLog = [];
+
+let questionStartTime = 0;
+
 /* =====================================
    QUESTION DATABASE
 ===================================== */
@@ -706,6 +712,9 @@ else if(questionType === "meaning"){
 
 }
 
+questionStartTime =
+Date.now();
+
 document
 .getElementById(
     "questionText"
@@ -854,6 +863,16 @@ function answerQuestion(
 ){
 
     totalAnswered++;
+    
+    const responseTime =
+
+(
+    Date.now()
+    -
+    questionStartTime
+)
+/1000;
+
 
     if(
         choice ===
@@ -861,6 +880,19 @@ function answerQuestion(
     ){
 
         correctAnswers++;
+        
+        questionLog.push({
+
+    topic:
+    q.name,
+
+    correct:
+    true,
+
+    responseTime:
+    responseTime
+
+});
 
         combo++;
 
@@ -902,6 +934,23 @@ function answerQuestion(
         combo = 0;
 
         hp--;
+        
+        wrongTopics.push(
+    q.name
+);
+
+questionLog.push({
+
+    topic:
+    q.name,
+
+    correct:
+    false,
+
+    responseTime:
+    responseTime
+
+});
 
         playWrong();
 
@@ -1279,6 +1328,14 @@ function saveResult(){
 
             mode:
             mode,
+            
+            wrongTopics:
+wrongTopics.join(","),
+
+questionLog:
+JSON.stringify(
+    questionLog
+),
 
             date:
             new Date()
