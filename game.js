@@ -7,6 +7,7 @@
 /* =====================================
    GLOBAL VARIABLES
 ===================================== */
+
 let resultSaved = false;
 const GOOGLE_SCRIPT_URL ="https://script.google.com/macros/s/AKfycbwDQUoIkpo_SPR3jen_o8AJV1vZtWHzoTs5Gf3BKge_bbAJ9MYuaRZOGeLKkoW4OulB/exec";
 
@@ -31,10 +32,11 @@ let totalAnswered = 0;
 
 let currentData = null;
 
+let questionPool = [];
+
 /* =====================================
    QUESTION DATABASE
 ===================================== */
-
 const DATABASE = [
 
 {
@@ -42,7 +44,8 @@ name:"Velocity",
 thai:"ความเร็ว",
 unit:"m/s",
 dimension:"[L T⁻¹]",
-fact:"อัตราการเปลี่ยนตำแหน่งต่อเวลา"
+formula:"v = dx/dt",
+meaning:"อัตราการเปลี่ยนตำแหน่งต่อเวลา"
 },
 
 {
@@ -50,7 +53,8 @@ name:"Acceleration",
 thai:"ความเร่ง",
 unit:"m/s²",
 dimension:"[L T⁻²]",
-fact:"อัตราการเปลี่ยนความเร็วต่อเวลา"
+formula:"a = dv/dt",
+meaning:"อัตราการเปลี่ยนความเร็วต่อเวลา"
 },
 
 {
@@ -58,31 +62,8 @@ name:"Force",
 thai:"แรง",
 unit:"N",
 dimension:"[M L T⁻²]",
-fact:"N = kg·m/s²"
-},
-
-{
-name:"Energy",
-thai:"พลังงาน",
-unit:"J",
-dimension:"[M L² T⁻²]",
-fact:"J = N·m"
-},
-
-{
-name:"Power",
-thai:"กำลัง",
-unit:"W",
-dimension:"[M L² T⁻³]",
-fact:"W = J/s"
-},
-
-{
-name:"Pressure",
-thai:"ความดัน",
-unit:"Pa",
-dimension:"[M L⁻¹ T⁻²]",
-fact:"Pa = N/m²"
+formula:"F = ma",
+meaning:"สาเหตุที่ทำให้วัตถุเปลี่ยนสภาพการเคลื่อนที่"
 },
 
 {
@@ -90,7 +71,62 @@ name:"Momentum",
 thai:"โมเมนตัม",
 unit:"kg·m/s",
 dimension:"[M L T⁻¹]",
-fact:"p = mv"
+formula:"p = mv",
+meaning:"ผลคูณของมวลและความเร็ว"
+},
+
+{
+name:"Impulse",
+thai:"อิมพัลส์",
+unit:"N·s",
+dimension:"[M L T⁻¹]",
+formula:"J = Δp",
+meaning:"การเปลี่ยนแปลงโมเมนตัม"
+},
+
+{
+name:"Work",
+thai:"งาน",
+unit:"J",
+dimension:"[M L² T⁻²]",
+formula:"W = Fd",
+meaning:"พลังงานที่ถ่ายโอนโดยแรง"
+},
+
+{
+name:"Kinetic Energy",
+thai:"พลังงานจลน์",
+unit:"J",
+dimension:"[M L² T⁻²]",
+formula:"K = ½mv²",
+meaning:"พลังงานเนื่องจากการเคลื่อนที่"
+},
+
+{
+name:"Potential Energy",
+thai:"พลังงานศักย์โน้มถ่วง",
+unit:"J",
+dimension:"[M L² T⁻²]",
+formula:"U = mgh",
+meaning:"พลังงานเนื่องจากตำแหน่ง"
+},
+
+{
+name:"Power",
+thai:"กำลัง",
+unit:"W",
+dimension:"[M L² T⁻³]",
+formula:"P = W/t",
+meaning:"อัตราการทำงาน"
+},
+
+{
+name:"Pressure",
+thai:"ความดัน",
+unit:"Pa",
+dimension:"[M L⁻¹ T⁻²]",
+formula:"P = F/A",
+meaning:"แรงต่อหนึ่งหน่วยพื้นที่"
 },
 
 {
@@ -98,7 +134,8 @@ name:"Density",
 thai:"ความหนาแน่น",
 unit:"kg/m³",
 dimension:"[M L⁻³]",
-fact:"มวลต่อปริมาตร"
+formula:"ρ = m/V",
+meaning:"มวลต่อหนึ่งหน่วยปริมาตร"
 },
 
 {
@@ -106,10 +143,50 @@ name:"Frequency",
 thai:"ความถี่",
 unit:"Hz",
 dimension:"[T⁻¹]",
-fact:"Hz = 1/s"
+formula:"f = 1/T",
+meaning:"จำนวนรอบต่อวินาที"
+},
+
+{
+name:"Angular Velocity",
+thai:"อัตราเร็วเชิงมุม",
+unit:"rad/s",
+dimension:"[T⁻¹]",
+formula:"ω = dθ/dt",
+meaning:"อัตราการเปลี่ยนมุมต่อเวลา"
+},
+
+{
+name:"Torque",
+thai:"แรงบิด",
+unit:"N·m",
+dimension:"[M L² T⁻²]",
+formula:"τ = rF",
+meaning:"แนวโน้มที่ทำให้เกิดการหมุน"
+},
+
+{
+name:"Angular Momentum",
+thai:"โมเมนตัมเชิงมุม",
+unit:"kg·m²/s",
+dimension:"[M L² T⁻¹]",
+formula:"L = r × p",
+meaning:"โมเมนตัมของการเคลื่อนที่แบบหมุน"
 }
 
 ];
+
+const ALL_FORMULAS =
+
+DATABASE.map(
+x => x.formula
+);
+
+const ALL_MEANINGS =
+
+DATABASE.map(
+x => x.meaning
+);
 
 /* =====================================
    SHORT LISTS
@@ -297,11 +374,45 @@ if(
     totalQuestions;
 
     updateEnergy();
+   
 
-    nextQuestion();
+questionPool = [];
 
+DATABASE.forEach(q=>{
+
+    if(mode === "mixed"){
+
+        questionPool.push({data:q,type:"unit"});
+        questionPool.push({data:q,type:"dimension"});
+        questionPool.push({data:q,type:"formula"});
+        questionPool.push({data:q,type:"meaning"});
+
+    }
+    else{
+
+        questionPool.push({
+            data:q,
+            type:mode
+        });
+
+    }
+
+});
+
+questionPool =
+shuffle(questionPool);
+
+if(
+totalQuestions >
+questionPool.length
+){
+totalQuestions =
+questionPool.length;
 }
 
+nextQuestion();
+
+}
 /* =====================================
    HELPERS
 ===================================== */
@@ -479,13 +590,15 @@ function nextQuestion(){
     .textContent =
     currentQuestion;
 
-    currentData =
+const question =
+questionPool.pop();
 
-        randomItem(
-            DATABASE
-        );
+currentData =
+question.data;
 
-    generateQuestion();
+generateQuestion(
+question.type
+);
 
     updateProgress();
 
@@ -495,112 +608,119 @@ function nextQuestion(){
    QUESTION GENERATOR
 ===================================== */
 
-function generateQuestion(){
+function generateQuestion(
+questionType
+){
 
-    const q = currentData;
+const q = currentData;
 
-    let questionType =
-        mode;
+let questionText = "";
+let correctAnswer = "";
+let options = [];
 
-    if(
-        mode ===
-        "mixed"
-    ){
+if(questionType === "unit"){
 
-        questionType =
+    questionText =
 
-            Math.random() < 0.5
+    `${q.thai}
+    (${q.name})
 
-            ?
+    <br><br>
 
-            "unit"
+    หน่วย SI คืออะไร ?`;
 
-            :
+    correctAnswer =
+    q.unit;
 
-            "dimension";
-
-    }
-
-    let questionText = "";
-
-    let correctAnswer = "";
-
-    let options = [];
-
-    if(
-        questionType ===
-        "unit"
-    ){
-
-        questionText =
-
-            `${q.thai}
-            (${q.name})
-
-            <br><br>
-
-            หน่วย SI
-            คืออะไร ?`;
-
-        correctAnswer =
-            q.unit;
-
-        options =
-
-            buildChoices(
-
-                q.unit,
-
-                ALL_UNITS
-
-            );
-
-    }
-    else{
-
-        questionText =
-
-            `${q.thai}
-            (${q.name})
-
-            <br><br>
-
-            มิติ
-            คืออะไร ?`;
-
-        correctAnswer =
-            q.dimension;
-
-        options =
-
-            buildChoices(
-
-                q.dimension,
-
-                ALL_DIMENSIONS
-
-            );
-
-    }
-
-    document
-    .getElementById(
-        "questionText"
-    )
-    .innerHTML =
-    questionText;
-
-    createButtons(
-
-        options,
-
-        correctAnswer,
-
-        q
-
+    options =
+    buildChoices(
+        q.unit,
+        ALL_UNITS
     );
 
 }
+
+else if(questionType === "dimension"){
+
+    questionText =
+
+    `${q.thai}
+    (${q.name})
+
+    <br><br>
+
+    มิติ คืออะไร ?`;
+
+    correctAnswer =
+    q.dimension;
+
+    options =
+    buildChoices(
+        q.dimension,
+        ALL_DIMENSIONS
+    );
+
+}
+
+else if(questionType === "formula"){
+
+    questionText =
+
+    `${q.thai}
+    (${q.name})
+
+    <br><br>
+
+    สูตรใดถูกต้อง ?`;
+
+    correctAnswer =
+    q.formula;
+
+    options =
+    buildChoices(
+        q.formula,
+        ALL_FORMULAS
+    );
+
+}
+
+else if(questionType === "meaning"){
+
+    questionText =
+
+    `${q.thai}
+    (${q.name})
+
+    <br><br>
+
+    มีความหมายว่าอะไร ?`;
+
+    correctAnswer =
+    q.meaning;
+
+    options =
+    buildChoices(
+        q.meaning,
+        ALL_MEANINGS
+    );
+
+}
+
+document
+.getElementById(
+    "questionText"
+)
+.innerHTML =
+questionText;
+
+createButtons(
+    options,
+    correctAnswer,
+    q
+);
+
+}
+
 
 /* =====================================
    BUILD CHOICES
@@ -770,7 +890,7 @@ function answerQuestion(
 
             "ยอดเยี่ยม!",
 
-            q.fact
+            q.meaning
 
         );
 
