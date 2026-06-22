@@ -1119,64 +1119,64 @@ function saveResult(){
 
     resultSaved = true;
 
-    fetch(
+   fetch(
+    GOOGLE_SCRIPT_URL,
+    {
+        method:"POST",
 
-        GOOGLE_SCRIPT_URL,
+        mode:"no-cors",
 
-        {
+        headers:{
+            "Content-Type":"text/plain"
+        },
 
-            method:"POST",
+        body:JSON.stringify({
 
-            body:JSON.stringify({
+            studentId:
+            studentId,
 
-                studentId:
-                studentId,
+            email:
+            studentEmail,
 
-                email:
-                studentEmail,
+            score:
+            score,
 
-                score:
-                score,
+            accuracy:
+            (
+                correctAnswers
+                /
+                totalAnswered
+                *
+                100
+            ).toFixed(1),
 
-                accuracy:
+            correct:
+            correctAnswers,
 
-                (
-                    correctAnswers
-                    /
-                    totalAnswered
-                    *
-                    100
-                ).toFixed(1),
+            total:
+            totalAnswered,
 
-                correct:
-                correctAnswers,
+            mode:
+            mode,
 
-                total:
-                totalAnswered,
+            date:
+            new Date()
+            .toISOString()
 
-                mode:
-                mode,
+        })
 
-                date:
-                new Date()
-                .toISOString()
+    }
+)
+.then(()=>{
 
-            })
-
-        }
-
-    )
-
-    .then(
-
-        r=>console.log("saved")
-
-    )
-
-    .catch(
-
-        err=>console.error(err)
-
+    console.log(
+        "sent"
     );
 
+})
+.catch(err=>{
+
+    console.error(err);
+
+});
 }
