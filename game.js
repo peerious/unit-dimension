@@ -8,7 +8,7 @@
    GLOBAL VARIABLES
 ===================================== */
 let resultSaved = false;
-const GOOGLE_SCRIPT_URL ="https://script.google.com/macros/s/AKfycbwUk5QaUW8AvBH6haS15SxXWVY6B2aZLaDa24RGEMMT_z8hzlcdZpTUC-9c3_88nySy/exec";
+const GOOGLE_SCRIPT_URL ="https://script.google.com/macros/s/AKfycbwDQUoIkpo_SPR3jen_o8AJV1vZtWHzoTs5Gf3BKge_bbAJ9MYuaRZOGeLKkoW4OulB/exec";
 let studentId = "";
 let studentEmail = "";
 
